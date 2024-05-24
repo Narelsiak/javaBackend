@@ -23,6 +23,9 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findUserByEmail(email);
+        if(user == null) {
+            throw new UsernameNotFoundException("Niepoprawne dane uwierzytelniające");
+        }
         List<String> roles = Arrays.asList(user.getRole());
         UserDetails userDetails =
                 org.springframework.security.core.userdetails.User.builder()

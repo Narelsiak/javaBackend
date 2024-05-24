@@ -15,7 +15,7 @@ public class AuthController {
 
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String login() {
-        return "login";
+        return "/login";
     }
 
     @RequestMapping(value = "/logout",method = RequestMethod.GET)

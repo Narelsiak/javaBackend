@@ -1,23 +1,13 @@
 package com.example.jp.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-@RequestMapping("")
 public class HomeController {
 
-    @ResponseBody
-    @RequestMapping(value = "/",method = RequestMethod.GET)
+    @GetMapping("/")
     public String index(){
-        return "hello world";
-    }
-
-    @ResponseBody
-    @RequestMapping(value = "/about",method = RequestMethod.GET)
-    public String about(){
-        return "about";
+        return "mainPage";
     }
 }

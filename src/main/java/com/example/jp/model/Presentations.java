@@ -17,7 +17,7 @@ public class Presentations {
     private Long id;
 
     @Column(nullable = false)
-    private String title;
+    private String name;
 
     @Column(nullable = false)
     private String description;
@@ -28,5 +28,4 @@ public class Presentations {
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
-
 }

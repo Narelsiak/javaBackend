@@ -48,7 +48,6 @@ public class AuthController {
                                  @RequestParam("newPassword") String newPassword,
                                  @RequestParam("confirmPassword") String confirmPassword,
                                  Model model) {
-        System.out.println("To jest wiadomość debugowania");
 
         String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userService.findUserByEmail(userEmail);

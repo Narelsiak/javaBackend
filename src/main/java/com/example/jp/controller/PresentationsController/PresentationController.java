@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
@@ -23,17 +24,23 @@ import java.util.UUID;
 public class PresentationController {
 
     private final PresentationService presentationService;
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
 
     @Autowired
-    public PresentationController(PresentationService presentationService) {
+    public PresentationController(PresentationService presentationService, CategoryService categoryService) {
         this.presentationService = presentationService;
+        this.categoryService = categoryService;
     }
 
     @GetMapping
-    public List<Presentations> getAllPresentations() {
-        return presentationService.getAllPresentations();
+    public List<Presentations> getAllPresentations(@RequestParam(required = false) Long category) {
+        System.out.println(category);
+        if(category == null) {
+            return presentationService.getAllPresentations();
+        }else{
+            return presentationService.getPresentationsByCategory(category);
+        }
     }
 
     @GetMapping("/{id}")
@@ -52,9 +59,13 @@ public class PresentationController {
 
         try {
             String fileName = UUID.randomUUID().toString() + ".pdf";
-            String filePath = "/src/main/resources/public/presentations/" + fileName;
-            System.out.println(filePath);
-            Files.copy(file.getInputStream(), Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+            Path uploadDir = Paths.get("data/presentations");
+            System.out.println(uploadDir);
+            if (!Files.exists(uploadDir)) {
+                Files.createDirectories(uploadDir);
+            }
+            Path filePath = uploadDir.resolve(fileName);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
             Optional<Category> categoryOptional = categoryService.getCategoryById(categoryId);
             if (categoryOptional.isEmpty()) {
@@ -65,13 +76,15 @@ public class PresentationController {
             Presentations presentation = new Presentations();
             presentation.setName(name);
             presentation.setDescription(description);
-            presentation.setFilePath(filePath);
+            presentation.setFilePath(filePath.toString());
+            presentation.setFileName(fileName);
             presentation.setCategory(category);
             presentationService.createPresentation(presentation);
 
             return ResponseEntity.ok("Prezentacja została dodana pomyślnie.");
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Wystąpił błąd podczas zapisywania pliku.");
+            e.printStackTrace(); // Logowanie szczegółów błędu
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Wystąpił błąd podczas zapisywania pliku: " + e.getMessage());
         }
     }
 
@@ -81,7 +94,19 @@ public class PresentationController {
     }
 
     @DeleteMapping("/{id}")
-    public void deletePresentation(@PathVariable Long id) {
-        presentationService.deletePresentation(id);
+    public ResponseEntity<String> deletePresentation(@PathVariable Long id) {
+        try {
+            Presentations presentation = presentationService.getPresentationById(id)
+                    .orElseThrow(() -> new RuntimeException("Nie znaleziono."));
+
+            Path filePath = Paths.get(presentation.getFilePath());
+            Files.deleteIfExists(filePath);
+
+            presentationService.deletePresentation(id);
+
+            return ResponseEntity.ok("Poprawnie usunięto rekord oraz plik.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Wystąpił błąd podczas usuwania.");
+        }
     }
 }

@@ -1,12 +1,14 @@
 package com.example.jp.controller.CategoryController;
 
 import com.example.jp.model.Category;
+import com.example.jp.model.Presentations;
 import com.example.jp.services.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +24,9 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
+    public List<Category> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
-        return new ResponseEntity<>(categories, HttpStatus.OK);
+        return categoryService.getAllCategories();
     }
 
     @GetMapping("/{id}")
@@ -39,9 +41,11 @@ public class CategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<Category> addCategory(@RequestBody Category category) {
-        Category newCategory = categoryService.createCategory(category);
-        return new ResponseEntity<>(newCategory, HttpStatus.CREATED);
+    public ResponseEntity<Category> addCategory(@RequestParam("name") String name) {
+        Category category = new Category();
+        category.setName(name);
+        categoryService.createCategory(category);
+        return new ResponseEntity<>(category, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -52,7 +56,12 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
-        categoryService.deleteCategory(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        try {
+            categoryService.deleteCategory(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Wystąpił błąd: " + e.getMessage());
+        }
     }
 }

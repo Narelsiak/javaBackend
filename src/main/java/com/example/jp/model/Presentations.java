@@ -25,6 +25,9 @@ public class Presentations {
     @Column(nullable = false)
     private String filePath;
 
+    @Column(nullable = false)
+    private String fileName;
+
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;

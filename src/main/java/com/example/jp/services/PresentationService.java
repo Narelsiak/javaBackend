@@ -24,6 +24,9 @@ public class PresentationService {
         return presentationRepository.findById(id);
     }
 
+    public List<Presentations> getPresentationsByCategory(Long categoryId) {
+        return presentationRepository.findByCategoryId(categoryId);
+    }
     public Presentations createPresentation(Presentations presentation) {
         return presentationRepository.save(presentation);
     }

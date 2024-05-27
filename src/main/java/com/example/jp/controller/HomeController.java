@@ -14,4 +14,12 @@ public class HomeController {
     public String presentations(){
         return "presentations";
     }
+    @GetMapping("/category")
+    public String categories(){
+        return "categories";
+    }
+    @GetMapping("/header")
+    public String header(){
+        return "header";
+    }
 }

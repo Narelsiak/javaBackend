@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,7 +36,6 @@ public class PresentationController {
 
     @GetMapping
     public List<Presentations> getAllPresentations(@RequestParam(required = false) Long category) {
-        System.out.println(category);
         if(category == null) {
             return presentationService.getAllPresentations();
         }else{
@@ -57,8 +57,12 @@ public class PresentationController {
             return ResponseEntity.badRequest().body("Plik PDF nie został przesłany.");
         }
 
+        if (!Objects.equals(file.getContentType(), "application/pdf")) {
+            return ResponseEntity.badRequest().body("Niewłaściwy typ pliku. Oczekiwano pliku PDF.");
+        }
+
         try {
-            String fileName = UUID.randomUUID().toString() + ".pdf";
+            String fileName = UUID.randomUUID() + ".pdf";
             Path uploadDir = Paths.get("data/presentations");
             System.out.println(uploadDir);
             if (!Files.exists(uploadDir)) {

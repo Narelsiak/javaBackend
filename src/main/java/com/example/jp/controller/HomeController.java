@@ -18,6 +18,14 @@ public class HomeController {
     public String categories(){
         return "categories";
     }
+    @GetMapping("/topic")
+    public String topic(){
+        return "topics";
+    }
+    @GetMapping("/sourcecode")
+    public String sourcecode(){
+        return "sourcecodes";
+    }
     @GetMapping("/header")
     public String header(){
         return "header";

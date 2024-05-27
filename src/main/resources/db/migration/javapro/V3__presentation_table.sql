@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS Presentations (
     name VARCHAR(255) NOT NULL,
     file_path VARCHAR(255) NOT NULL,
     file_name VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL,
     category_id INT,
     FOREIGN KEY (category_id) REFERENCES Categories(id)
 );

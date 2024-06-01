@@ -1,5 +1,9 @@
-package com.example.jp.model;
+package com.example.jp.model.Presentations;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -28,7 +32,10 @@ public class Presentations {
     @Column(nullable = false)
     private String fileName;
 
-    @ManyToOne
+//    @JsonManagedReference("category-presentation")
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "category_id", nullable = false)
+    @JsonIgnoreProperties("presentations")
+//    @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class , property = "id")
     private Category category;
 }

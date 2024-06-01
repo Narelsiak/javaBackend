@@ -1,7 +1,7 @@
-package com.example.jp.controller.TopicsController;
+package com.example.jp.controller.Topics;
 
-import com.example.jp.model.Topics;
-import com.example.jp.services.TopicsService;
+import com.example.jp.model.Topics.Topics;
+import com.example.jp.services.Topics.TopicsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/topics")
+@RequestMapping("admin/topics")
 public class TopicsController {
 
     private final TopicsService topicsService;
@@ -23,7 +23,6 @@ public class TopicsController {
 
     @GetMapping
     public List<Topics> getAllTopics() {
-        List<Topics> topics = topicsService.getAllTopics();
         return topicsService.getAllTopics();
     }
 

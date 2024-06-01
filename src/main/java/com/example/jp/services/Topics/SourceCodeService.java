@@ -1,8 +1,7 @@
-package com.example.jp.services;
+package com.example.jp.services.Topics;
 
-import com.example.jp.model.SourceCode;
-import com.example.jp.model.Topics;
-import com.example.jp.repositories.SourceCodeRepository;
+import com.example.jp.model.Topics.SourceCode;
+import com.example.jp.repositories.Topics.SourceCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;

@@ -1,5 +1,5 @@
-package com.example.jp.model;
-import com.example.jp.model.Topics;
+package com.example.jp.model.Topics;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -26,7 +26,8 @@ public class SourceCode {
     @Column(name = "code", columnDefinition = "LONGTEXT", nullable = false)
     private String code;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JsonIgnoreProperties("sourceCodeList")
     @JoinColumn(name = "topic_id", nullable = false)
     private Topics topic;
 }

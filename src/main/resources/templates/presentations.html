@@ -21,7 +21,7 @@
 
 <div class="container">
     <h1 class="my-4">Prezentacje</h1>
-    <a class="btn btn-primary" href="/category" role="button">Kategorie</a>
+    <a class="btn btn-primary" href="/admin/category" role="button">Kategorie</a>
     <div class="form-group">
         <label for="category-filter">Filtruj według kategorii:</label>
         <select class="form-control" id="category-filter" onchange="filterPresentations()">
@@ -33,6 +33,12 @@
             <h2>Dodane prezentacje</h2>
             <ul id="presentation-list" class="list-group">
             </ul>
+            <div th:each="presentation : ${presentations}">
+                <!-- Tutaj dodaj kod HTML, który będzie wyświetlał pojedynczy element prezentacji -->
+                <!-- Na przykład, aby wyświetlić tytuł prezentacji: -->
+                <p th:text="${presentation.name}"></p>
+                <!-- Dodaj więcej elementów HTML, aby wyświetlić inne właściwości prezentacji -->
+            </div>
         </div>
         <div class="col-md-6">
             <div class="form-container">
@@ -62,6 +68,38 @@
             </div>
         </div>
     </div>
+    <!-- Modal for editing presentation -->
+    <div class="modal fade" id="editPresentationModal" tabindex="-1" role="dialog" aria-labelledby="editPresentationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPresentationModalLabel">Edytuj prezentację</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-presentation-form">
+                        <div class="form-group">
+                            <label for="edit-name">Nazwa</label>
+                            <input type="text" class="form-control" id="edit-name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-description">Opis</label>
+                            <textarea class="form-control" id="edit-description" name="description" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-category-select">Kategoria</label>
+                            <select class="form-control" id="edit-category-select" name="category_id" required>
+                                <!-- Categories will be dynamically populated here -->
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
@@ -70,9 +108,8 @@
     $(function() {
         $("#header-placeholder").load("/header");
     });
-    // Function to fetch and display existing presentations
     function fetchPresentations(categoryId) {
-        const url = categoryId ? `/presentations?category=${categoryId}` : '/presentations';
+        const url = categoryId ? `/admin/presentations?category=${categoryId}` : '/admin/presentations';
 
         fetch(url)
             .then(response => response.json())
@@ -91,17 +128,11 @@
                     </div>
 <div class="d-flex justify-content-center">
 <button class="btn btn-sm btn-warning me-2" onclick="editPresentation(${presentation.id})">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
-        <path d="M14.646 1.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0zM1 13.5V15h1.5l9.689-9.689-1.5-1.5L1 13.5z"/>
-        <path fill-rule="evenodd" d="M0 4a1 1 0 0 1 1-1h3.293a1 1 0 0 1 .707.293l8 8a1 1 0 0 1 .153 1.21l-1.5 3a1 1 0 0 1-1.316.424l-3.09-1.545a1 1 0 0 1-.424-1.316l.803-1.606-8-8A1 1 0 0 1 0 4z"/>
-    </svg>
+Edytuj
 </button>
-<button class="btn btn-sm"></button>
-
+<span class="mx-1"></span>
 <button class="btn btn-sm btn-danger" onclick="deletePresentation(${presentation.id})">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
-        <path d="M4.5 1.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 .5.5V2h-7v-.5zm9-1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V1a1 1 0 0 1 1-1h3V0a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v.5h3zM2 5a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-10a1 1 0 0 1-1-1V5z"/>
-    </svg>
+Usuń
 </button>
                     </div>
                 `;
@@ -111,7 +142,6 @@
             .catch(error => console.error('Error fetching presentations:', error));
     }
 
-    // Function to fetch categories and populate the select element
     function fetchCategories() {
         const categorySelect = document.getElementById('category_select');
         categorySelect.innerHTML = ''; // Clear existing options
@@ -119,7 +149,10 @@
         const categoryPresentationSelect = document.getElementById('category-filter');
         categoryPresentationSelect.innerHTML - '';
 
-        fetch('/categories')
+        const categoryEdit = document.getElementById('edit-category-select');
+        categoryPresentationSelect.innerHTML = '';
+
+        fetch('/admin/categories')
             .then(response => response.json())
             .then(categories => {
                 categories.forEach(category => {
@@ -132,6 +165,11 @@
                     option2.value = category.id;
                     option2.textContent = category.name;
                     categoryPresentationSelect.appendChild(option2);
+
+                    const option3 = document.createElement('option');
+                    option3.value = category.id;
+                    option3.textContent = category.name;
+                    categoryEdit.appendChild(option3);
                 });
                 categoryPresentationSelect.selectedIndex = 0;
             })
@@ -144,7 +182,7 @@
 
         const formData = new FormData(this);
 
-        fetch('/presentations', {
+        fetch('/admin/presentations', {
             method: 'POST',
             body: formData
         })
@@ -164,7 +202,7 @@
             return;
         }
 
-        fetch(`/presentations/${id}`, {
+        fetch(`/admin/presentations/${id}`, {
             method: 'DELETE'
         })
             .then(response => {
@@ -176,11 +214,35 @@
             .catch(error => console.error('Error deleting presentation:', error));
     }
 
-    // Function to edit a presentation (you can implement this based on your needs)
     function editPresentation(id) {
-        // Implementation for editing a presentation
-        alert('Edit functionality is not yet implemented.');
+        fetch(`/admin/presentations/${id}`)
+            .then(response => response.json())
+            .then(presentation => {
+                document.getElementById('edit-name').value = presentation.name;
+                document.getElementById('edit-description').value = presentation.description;
+                document.getElementById('edit-category-select').value = presentation.category.id;
+                $('#editPresentationModal').modal('show');
+                editPresentationId = id;
+            })
+            .catch(error => console.error('Error fetching presentation for editing:', error));
     }
+
+    document.getElementById('edit-presentation-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const formData = new FormData(this);
+        fetch(`/admin/presentations/${editPresentationId}`, {
+            method: 'PUT',
+            body: formData
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update presentation');
+                }
+                $('#editPresentationModal').modal('hide');
+                fetchPresentations(); // Refresh presentation list
+            })
+            .catch(error => console.error('Error updating presentation:', error));
+    });
 
     function filterPresentations() {
         const categoryId = document.getElementById('category-filter').value;

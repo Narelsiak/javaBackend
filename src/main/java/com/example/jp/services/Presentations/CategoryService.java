@@ -1,7 +1,7 @@
-package com.example.jp.services;
+package com.example.jp.services.Presentations;
 
-import com.example.jp.model.Category;
-import com.example.jp.repositories.CategoriesRepository;
+import com.example.jp.model.Presentations.Category;
+import com.example.jp.repositories.Presentations.CategoriesRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,8 +20,12 @@ public class CategoryService {
         return categoryRepository.findAll();
     }
 
-    public Optional<Category> getCategoryById(Long id) {
-        return categoryRepository.findById(id);
+    public List<Category> getAllCategoriesWithPresentations() {
+        return categoryRepository.findAllWithPresentations();
+    }
+
+    public Category getCategoryById(Long id) {
+        return categoryRepository.findById(id).orElse(null);
     }
 
     public Category createCategory(Category category) {
@@ -40,5 +44,8 @@ public class CategoryService {
 
     public void deleteCategory(Long id) {
         categoryRepository.deleteById(id);
+    }
+    public boolean existsByName(String name) {
+        return categoryRepository.existsByName(name);
     }
 }

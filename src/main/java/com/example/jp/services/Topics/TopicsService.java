@@ -1,7 +1,7 @@
-package com.example.jp.services;
+package com.example.jp.services.Topics;
 
-import com.example.jp.model.Topics;
-import com.example.jp.repositories.TopicsRepository;
+import com.example.jp.model.Topics.Topics;
+import com.example.jp.repositories.Topics.TopicsRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,7 +19,12 @@ public class TopicsService {
     public List<Topics> getAllTopics() {
         return topicsRepository.findAll();
     }
-
+    public List<Topics> getAllTopicsWithCode() {
+        return topicsRepository.getAllTopicsWithCode();
+    }
+    public List<Topics> getAllTopicsWithLink() {
+        return topicsRepository.getAllTopicsWithLink();
+    }
     public Optional<Topics> getTopicsById(Long id) {
         return topicsRepository.findById(id);
     }

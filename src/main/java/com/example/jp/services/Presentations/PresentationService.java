@@ -1,7 +1,7 @@
-package com.example.jp.services;
+package com.example.jp.services.Presentations;
 
-import com.example.jp.model.Presentations;
-import com.example.jp.repositories.PresentationsRepository;
+import com.example.jp.model.Presentations.Presentations;
+import com.example.jp.repositories.Presentations.PresentationsRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,13 +20,14 @@ public class PresentationService {
         return presentationRepository.findAll();
     }
 
-    public Optional<Presentations> getPresentationById(Long id) {
-        return presentationRepository.findById(id);
+    public Presentations getPresentationById(Long id) {
+        return presentationRepository.findById(id).orElse(null);
     }
 
     public List<Presentations> getPresentationsByCategory(Long categoryId) {
         return presentationRepository.findByCategoryId(categoryId);
     }
+
     public Presentations createPresentation(Presentations presentation) {
         return presentationRepository.save(presentation);
     }
@@ -44,5 +45,9 @@ public class PresentationService {
 
     public void deletePresentation(Long id) {
         presentationRepository.deleteById(id);
+    }
+
+    public Presentations savePresentation(Presentations existingPresentation) {
+        return presentationRepository.save(existingPresentation);
     }
 }

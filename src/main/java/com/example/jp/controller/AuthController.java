@@ -8,16 +8,12 @@ import org.springframework.security.access.expression.SecurityExpressionHandler;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 
-import java.util.Objects;
 
 @Controller
 @RequestMapping("")
@@ -25,17 +21,31 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final UserService userService;
-    private final SecurityExpressionHandler webSecurityExpressionHandler;
 
     public AuthController(UserRepository userRepository, UserService userService, SecurityExpressionHandler webSecurityExpressionHandler) {
         this.userRepository = userRepository;
         this.userService = userService;
-        this.webSecurityExpressionHandler = webSecurityExpressionHandler;
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public String login() {
-        return "/login";
+        return "login";
+    }
+
+    @RequestMapping(value = "/register", method = RequestMethod.GET)
+    public String register() {
+        return "/register";
+    }
+
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
+    public String registerUser(@ModelAttribute("user") User user, Model model) throws Exception {
+        try {
+            userService.registerUser(user);
+            return "redirect:/";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            return "register";
+        }
     }
 
     @RequestMapping(value = "/change_password", method = RequestMethod.GET)

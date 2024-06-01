@@ -1,9 +1,10 @@
-package com.example.jp.controller.PresentationsController;
+package com.example.jp.controller.Presentations;
 
-import com.example.jp.model.Category;
-import com.example.jp.model.Presentations;
-import com.example.jp.services.CategoryService;
-import com.example.jp.services.PresentationService;
+import com.example.jp.model.Presentations.Category;
+import com.example.jp.model.Presentations.Presentations;
+import com.example.jp.repositories.Presentations.CategoriesRepository;
+import com.example.jp.services.Presentations.CategoryService;
+import com.example.jp.services.Presentations.PresentationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/presentations")
+@RequestMapping("admin/presentations")
 public class PresentationController {
 
     private final PresentationService presentationService;
@@ -36,15 +37,19 @@ public class PresentationController {
 
     @GetMapping
     public List<Presentations> getAllPresentations(@RequestParam(required = false) Long category) {
+        List<Presentations> presentations;
         if(category == null) {
+            //presentations = presentationService.getAllPresentations();
             return presentationService.getAllPresentations();
         }else{
+            //presentations = presentationService.getPresentationsByCategory(category);
             return presentationService.getPresentationsByCategory(category);
         }
+        //return presentations.stream().map(PresentationDTO::new).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public Optional<Presentations> getPresentationById(@PathVariable Long id) {
+    public Presentations getPresentationById(@PathVariable Long id) {
         return presentationService.getPresentationById(id);
     }
 
@@ -71,11 +76,7 @@ public class PresentationController {
             Path filePath = uploadDir.resolve(fileName);
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            Optional<Category> categoryOptional = categoryService.getCategoryById(categoryId);
-            if (categoryOptional.isEmpty()) {
-                return ResponseEntity.badRequest().body("Nieprawidłowa kategoria.");
-            }
-            Category category = categoryOptional.get();
+            Category category = categoryService.getCategoryById(categoryId);
 
             Presentations presentation = new Presentations();
             presentation.setName(name);
@@ -93,15 +94,24 @@ public class PresentationController {
     }
 
     @PutMapping("/{id}")
-    public Presentations updatePresentation(@PathVariable Long id, @RequestBody Presentations presentation) {
-        return presentationService.updatePresentation(id, presentation);
+    public Presentations updatePresentation(@PathVariable Long id,
+                                            @RequestParam("name") String name,
+                                            @RequestParam("description") String description,
+                                            @RequestParam("category_id") Long categoryId) {
+        Presentations existingPresentation = presentationService.getPresentationById(id);
+        existingPresentation.setName(name);
+        existingPresentation.setDescription(description);
+        Category category = categoryService.getCategoryById(categoryId);
+        if (category != null) {
+            existingPresentation.setCategory(category);
+        }
+        return presentationService.savePresentation(existingPresentation);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletePresentation(@PathVariable Long id) {
         try {
-            Presentations presentation = presentationService.getPresentationById(id)
-                    .orElseThrow(() -> new RuntimeException("Nie znaleziono."));
+            Presentations presentation = presentationService.getPresentationById(id);
 
             Path filePath = Paths.get(presentation.getFilePath());
             Files.deleteIfExists(filePath);

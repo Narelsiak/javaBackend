@@ -1,6 +1,6 @@
-package com.example.jp.repositories;
+package com.example.jp.repositories.Topics;
 
-import com.example.jp.model.SourceCode;
+import com.example.jp.model.Topics.SourceCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

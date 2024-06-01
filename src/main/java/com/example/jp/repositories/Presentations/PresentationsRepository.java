@@ -1,6 +1,6 @@
-package com.example.jp.repositories;
+package com.example.jp.repositories.Presentations;
 
-import com.example.jp.model.Presentations;
+import com.example.jp.model.Presentations.Presentations;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

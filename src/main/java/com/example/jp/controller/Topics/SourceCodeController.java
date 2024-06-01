@@ -1,9 +1,9 @@
-package com.example.jp.controller.SourceCodeController;
+package com.example.jp.controller.Topics;
 
-import com.example.jp.model.SourceCode;
-import com.example.jp.model.Topics;
-import com.example.jp.services.SourceCodeService;
-import com.example.jp.services.TopicsService;
+import com.example.jp.model.Topics.SourceCode;
+import com.example.jp.model.Topics.Topics;
+import com.example.jp.services.Topics.SourceCodeService;
+import com.example.jp.services.Topics.TopicsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/sourcecodes")
+@RequestMapping("admin/sourcecodes")
 public class SourceCodeController {
 
     @Autowired
@@ -23,7 +23,6 @@ public class SourceCodeController {
 
     @GetMapping
     public List<SourceCode> getAllSourceCodes(@RequestParam(required = false) Long topic) {
-        System.out.println(topic);
         if(topic == null) {
             return sourceCodeService.getAllSourceCodes();
         }else{

@@ -30,4 +30,15 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }
+
+    public void registerUser(User user) throws Exception {
+        if (userRepository.findUserByEmail(user.getEmail()) != null) {
+            throw new Exception("User with this email already exists");
+        }
+        if(userRepository.findUserByNickname(user.getUsername()) != null) {
+            throw new Exception("User with this nickname already exists");
+        }
+        user.setRole("USER");
+        userRepository.save(user);
+    }
 }

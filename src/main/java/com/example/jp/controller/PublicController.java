@@ -1,9 +1,15 @@
 package com.example.jp.controller;
 
-import com.example.jp.model.Category;
-import com.example.jp.model.Presentations;
-import com.example.jp.services.CategoryService;
-import com.example.jp.services.PresentationService;
+import com.example.jp.model.Presentations.Category;
+import com.example.jp.model.Presentations.Presentations;
+import com.example.jp.model.Topics.Link;
+import com.example.jp.model.Topics.SourceCode;
+import com.example.jp.model.Topics.Topics;
+import com.example.jp.services.Presentations.CategoryService;
+import com.example.jp.services.Presentations.PresentationService;
+import com.example.jp.services.Topics.LinkService;
+import com.example.jp.services.Topics.SourceCodeService;
+import com.example.jp.services.Topics.TopicsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +25,17 @@ public class PublicController {
     private CategoryService categoryService;
     @Autowired
     private PresentationService presentationService;
+    @Autowired
+    private TopicsService topicsService;
+    @Autowired
+    private SourceCodeService sourceCodeService;
+    @Autowired
+    private LinkService linkService;
+
+
     @GetMapping("/categories")
     public List<Category> getAllCategories() {
-        return categoryService.getAllCategories();
+        return categoryService.getAllCategoriesWithPresentations();
     }
 
     @GetMapping("/presentations")
@@ -32,4 +46,31 @@ public class PublicController {
             return presentationService.getPresentationsByCategory(category);
         }
     }
+    @GetMapping("/topicsCode")
+    public List<Topics> getAllTopicsWithCode() {
+        return topicsService.getAllTopicsWithCode();
+    }
+
+    @GetMapping("/topicsCode/code")
+    public List<SourceCode> getAllSourceCodes(@RequestParam(required = false) Long topic) {
+        if(topic == null) {
+            return sourceCodeService.getAllSourceCodes();
+        }else{
+            return sourceCodeService.getCodeByTopics(topic);
+        }
+    }
+    @GetMapping("/topicsLink")
+    public List<Topics> getAllTopicsWithLink() {
+        return topicsService.getAllTopicsWithLink();
+    }
+
+    @GetMapping("/topicsLink/link")
+    public List<Link> getAllLink(@RequestParam(required = false) Long topic) {
+        if(topic == null) {
+            return linkService.getAllLinks();
+        }else{
+            return linkService.getLinksByTopic(topic);
+        }
+    }
+
 }

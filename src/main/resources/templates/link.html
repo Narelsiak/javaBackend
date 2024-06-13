@@ -87,7 +87,7 @@
                         <div class="form-group">
                             <label for="edit-category-select">Temat</label>
                             <select class="form-control" id="edit-category-select" name="topic" required>
-                                <option value="">Wybierz kategorię</option>
+                                <option value="">Wybierz temat</option>
                             </select>
                         </div>
                         <button type="submit" class="btn btn-primary">Zapisz zmiany</button>
@@ -123,7 +123,7 @@
                     const listItem = document.createElement('li');
                     listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
                     listItem.innerHTML = `
-                    <div>
+                    <div style ="overflow-wrap:anywhere">
                         Tytuł: <a href="${link.link}" target="_blank">${link.title}</a><br>
                          Kategoria: ${link?.topic?.name} <br>
                         <small>Opis: ${link.description}</small>

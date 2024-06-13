@@ -1,5 +1,6 @@
 package com.example.jp.controller.Topics;
 
+import com.example.jp.model.Topics.Link;
 import com.example.jp.model.Topics.SourceCode;
 import com.example.jp.model.Topics.Topics;
 import com.example.jp.services.Topics.SourceCodeService;
@@ -61,5 +62,9 @@ public class SourceCodeController {
     public ResponseEntity<Void> deleteSourceCode(@PathVariable("id") Long id) {
         sourceCodeService.deleteSourceCode(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+    @PutMapping("/{id}")
+    public SourceCode updateCode(@PathVariable Long id, @RequestBody SourceCode code) {
+        return sourceCodeService.updateCode(id, code);
     }
 }

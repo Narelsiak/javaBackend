@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wyświetl test</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div id="header-placeholder"></div>
+<div class="container mt-5">
+    <h2>Test: [[${test.name}]]</h2>
+    <div style="visibility: hidden" id="test-data">[[${test.id}]]</div>
+    <div id="questions-container"></div>
+    <div class="mb-3"></div>
+    <button type="button" class="btn btn-secondary mb-3" id="add-question-btn">Dodaj pytanie</button>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(function() {
+        $("#header-placeholder").load("/header");
+    });
+    $(document).ready(function() {
+        const testId = $('#test-data')[0].textContent;
+
+        // Pobieranie testu i pytania
+        $.ajax({
+            url: `/admin/tests/${testId}`,
+            method: 'GET',
+            success: function(test) {
+                console.log(test);
+                renderQuestions(test.questions);
+            },
+            error: function(error) {
+                alert('Wystąpił błąd podczas pobierania danych testu.');
+            }
+        });
+
+        // Funkcja renderująca pytania
+        function renderQuestions(questions) {
+            questions.forEach(function(question, index) {
+                appendQuestionHtml(question, index + 1);
+                loadAnswers(question.id);
+            });
+        }
+
+        // Funkcja do pobierania odpowiedzi dla pytania
+        function loadAnswers(questionId) {
+            $.ajax({
+                url: `/admin/questions/${questionId}`,
+                method: 'GET',
+                success: function(answers) {
+                    answers.options.forEach(function(answer, answerIndex) {
+                        appendAnswerHtml(answer, questionId, answerIndex);
+                    });
+                },
+                error: function(error) {
+                    alert('Wystąpił błąd podczas pobierania odpowiedzi na pytanie.');
+                }
+            });
+        }
+
+        // Funkcja do dodawania pytania HTML
+        function appendQuestionHtml(question, questionNumber) {
+            const questionHtml = `
+                <div class="question-container" data-question-id="${question.id}">
+                    <div class="question-header">
+                        <span class="question-number">Pytanie ${questionNumber}</span>
+                        <div class="form-group">
+                            <label for="question-${question.id}">Pytanie</label>
+                            <input type="text" class="form-control question-input" id="question-${question.id}" name="question-${question.id}" value="${question.text}" required minlength="3">
+                        </div>
+                        <div class="form-group">
+                            <label for="answers-${question.id}">Odpowiedzi</label>
+                            <div id="answers-${question.id}">
+                                <!-- Tutaj będą dodawane odpowiedzi -->
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm mt-2 add-answer-btn" data-question-id="${question.id}">Dodaj odpowiedź</button>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm btn-update-question" data-question-id="${question.id}">Aktualizuj pytanie</button>
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-question" data-question-id="${question.id}">Usuń pytanie</button>
+                    </div>
+                </div>`;
+            $('#questions-container').append(questionHtml);
+        }
+
+        // Funkcja do dodawania odpowiedzi HTML
+        function appendAnswerHtml(answer, questionId, answerIndex) {
+            const answerHtml = `
+                <div class="input-group mb-2 answer-input-group" data-index="${answerIndex}">
+                    <input type="text" class="form-control answer-input" name="answer-${questionId}-${answerIndex}" value="${answer.text}" required minlength="3">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="correct-answer-checkbox answer-checkbox" name="correct-answer-${questionId}" value="${answerIndex}" ${answer.correct ? 'checked' : ''}>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm btn-remove-answer" data-question-id="${questionId}" data-answer-id="${answer.id}">Usuń</button>
+                </div>`;
+            $(`#answers-${questionId}`).append(answerHtml);
+        }
+
+        // Funkcja do obsługi kliknięcia przycisku dodawania pytania
+        $('#add-question-btn').on('click', function() {
+            const newQuestionId = `new-${Date.now()}`;
+            const questionNumber = $('.question-container').length + 1;
+            const newQuestionHtml = `
+                <div class="question-container" data-question-id="${newQuestionId}">
+                    <div class="question-header">
+                        <span class="question-number">Pytanie ${questionNumber}</span>
+                        <div class="form-group">
+                            <label for="question-${newQuestionId}">Pytanie</label>
+                            <input type="text" class="form-control question-input" id="question-${newQuestionId}" name="question-${newQuestionId}" required minlength="3">
+                        </div>
+                        <div class="form-group">
+                            <label for="answers-${newQuestionId}">Odpowiedzi</label>
+                            <div id="answers-${newQuestionId}">
+                                <!-- Tutaj będą dodawane odpowiedzi -->
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm mt-2 add-answer-btn" data-question-id="${newQuestionId}">Dodaj odpowiedź</button>
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm btn-save-question" data-question-id="${newQuestionId}">Zapisz pytanie</button>
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-question" data-question-id="${newQuestionId}">Usuń pytanie</button>
+                    </div>
+                </div>`;
+            $('#questions-container').append(newQuestionHtml);
+        });
+
+        // Funkcja do obsługi zapisywania nowego pytania
+        $('#questions-container').on('click', '.btn-save-question', function() {
+            const questionId = $(this).data('question-id');
+            const questionText = $(`#question-${questionId}`).val();
+            const answers = [];
+            $(`#answers-${questionId} .answer-input-group`).each(function(answerIndex, answerGroup) {
+                const answerText = $(answerGroup).find('.answer-input').val();
+                const isCorrect = $(answerGroup).find('.correct-answer-checkbox').is(':checked');
+                if(answerText.length) {
+                    answers.push({
+                        text: answerText,
+                        correct: isCorrect
+                    });
+                }
+            });
+
+            $.ajax({
+                url: `/admin/questions/create/${testId}`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    text: questionText,
+                    options: answers,
+                }),
+                success: function(response) {
+                    alert('Pytanie zostało pomyślnie zapisane.');
+                    location.reload(); // Odśwież stronę, aby zobaczyć zaktualizowaną listę pytań
+                },
+                error: function(error) {
+                    alert('Wystąpił błąd podczas zapisywania pytania.');
+                }
+            });
+        });
+
+        // Funkcja do dodawania nowej odpowiedzi
+        $('#questions-container').on('click', '.add-answer-btn', function() {
+            const questionId = $(this).data('question-id');
+            const answerIndex = $(`#answers-${questionId} .answer-input-group`).length;
+            const answerHtml = `
+                <div class="input-group mb-2 answer-input-group" data-index="${answerIndex}">
+                    <input type="text" class="form-control answer-input" name="answer-${questionId}-${answerIndex}" required minlength="3">
+                    <div class="input-group-append">
+                        <div class="input-group-text">
+                            <input type="checkbox" class="correct-answer-checkbox answer-checkbox" name="correct-answer-${questionId}" value="${answerIndex}">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm btn-remove-answer" data-question-id="${questionId}" data-answer-index="${answerIndex}">Usuń odpowiedź</button>
+                </div>`;
+            $(`#answers-${questionId}`).append(answerHtml);
+        });
+
+        // Funkcja do usuwania odpowiedzi
+        $('#questions-container').on('click', '.btn-remove-answer', function() {
+            const questionId = $(this).data('question-id');
+            const answerId = $(this).data('answer-id');
+            const answerIndex = $(this).data('answer-index');
+
+            $.ajax({
+                url: `/admin/options/delete/${answerId}`,
+                method: 'DELETE',
+                success: function(response) {
+                    console.log('Odpowiedź została pomyślnie usunięta.');
+                    $(`#answers-${questionId} .btn-remove-answer[data-answer-id="${answerId}"]`).closest('.answer-input-group').remove();
+                },
+                error: function(error) {
+                    console.error('Wystąpił błąd podczas usuwania odpowiedzi.');
+                }
+            });
+        });
+
+        // Funkcja do usuwania pytania
+        $('#questions-container').on('click', '.btn-remove-question', function() {
+            const questionId = $(this).data('question-id');
+            $(`[data-question-id="${questionId}"]`).remove();
+        });
+
+        // Funkcja do aktualizacji pytania
+        $('#questions-container').on('click', '.btn-update-question', function() {
+            const questionId = $(this).data('question-id');
+            const questionText = $(`#question-${questionId}`).val();
+            const answers = [];
+            $(`#answers-${questionId} .answer-input-group`).each(function(answerIndex, answerGroup) {
+                const answerText = $(answerGroup).find('.answer-input').val();
+                const isCorrect = $(answerGroup).find('.correct-answer-checkbox').is(':checked');
+                const optionId = $(answerGroup).find('.btn').data("answer-id") ?? null;
+                console.log(optionId);
+                if(answerText.length) {
+                    answers.push({
+                        text: answerText,
+                        correct: isCorrect,
+                        id: optionId,
+                    });
+                }
+            });
+
+            $.ajax({
+                url: `/admin/questions/${questionId}`,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    text: questionText,
+                    options: answers
+                }),
+                success: function(response) {
+                    alert('Pytanie zostało pomyślnie zaktualizowane.');
+                },
+                error: function(error) {
+                    alert('Wystąpił błąd podczas aktualizacji pytania.');
+                }
+            });
+        });
+    });
+</script>
+</body>
+</html>

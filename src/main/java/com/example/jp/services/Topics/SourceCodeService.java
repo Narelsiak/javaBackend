@@ -1,5 +1,6 @@
 package com.example.jp.services.Topics;
 
+import com.example.jp.model.Topics.Link;
 import com.example.jp.model.Topics.SourceCode;
 import com.example.jp.repositories.Topics.SourceCodeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,5 +30,18 @@ public class SourceCodeService {
 
     public void deleteSourceCode(Long id) {
         sourceCodeRepository.deleteById(id);
+    }
+
+    public SourceCode updateCode(Long id, SourceCode updatedCode) {
+        Optional<SourceCode> optionalSourceCode = sourceCodeRepository.findById(id);
+        if (optionalSourceCode.isPresent()) {
+            SourceCode existingCode = optionalSourceCode.get();
+            existingCode.setTitle(updatedCode.getTitle());
+            existingCode.setDescription(updatedCode.getDescription());
+            existingCode.setCode(updatedCode.getCode());
+            existingCode.setTopic(updatedCode.getTopic());
+            return sourceCodeRepository.save(existingCode);
+        }
+        return null;
     }
 }

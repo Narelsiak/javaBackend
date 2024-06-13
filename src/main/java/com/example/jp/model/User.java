@@ -1,12 +1,15 @@
 package com.example.jp.model;
 
-
+import com.example.jp.model.Test.Test;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,7 +20,7 @@ import java.util.Date;
 public class User {
     @Id
     @Column(name = "ID")
-    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     @Column(name = "EMAIL")
@@ -31,6 +34,10 @@ public class User {
 
     @Column(name = "ROLE")
     private String role;
+
+    @ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<Test> tests;
 
     public User(String email, String password) {
         this.email = email;

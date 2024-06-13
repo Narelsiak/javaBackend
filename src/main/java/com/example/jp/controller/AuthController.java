@@ -4,7 +4,11 @@ package com.example.jp.controller;
 import com.example.jp.model.User;
 import com.example.jp.repositories.UserRepository;
 import com.example.jp.services.UserService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.expression.SecurityExpressionHandler;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -84,6 +88,16 @@ public class AuthController {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         securityContext.setAuthentication(null);
         return "redirect:/login";
+    }
+
+    @GetMapping("/auth/check")
+    public ResponseEntity<String> checkAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!(authentication instanceof AnonymousAuthenticationToken)) {
+            return ResponseEntity.ok("Użytkownik jest zalogowany" );
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Użytkownik nie jest zalogowany");
+        }
     }
 }
 

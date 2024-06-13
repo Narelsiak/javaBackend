@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dodaj nowy test</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .question-container {
+            margin-bottom: 20px;
+        }
+        .question-header {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            margin-bottom: 10px;
+        }
+        .answer-input-group {
+            margin-bottom: 10px;
+        }
+        .answer-checkbox {
+            margin-left: 10px;
+        }
+        .btn-add-answer, .btn-remove-question, .btn-remove-answer {
+            margin-top: 10px;
+        }
+        .question-number {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-container">
+                <h2>Dodaj nowy test:</h2>
+                <form id="test-form">
+                    <div class="form-group">
+                        <label for="name">Nazwa</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="type">Typ</label>
+                        <select class="form-control" id="type" name="type" required>
+                            <option value="QUIZ">QUIZ</option>
+                            <option value="EXAM">EXAM</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeLimit">Limit czasu (minuty)</label>
+                        <input type="number" class="form-control" id="timeLimit" name="timeLimit" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="visibility">Widoczność</label>
+                        <input type="checkbox" class="form-control" id="visibility" name="visibility" checked>
+                    </div>
+                    <div class="form-group">
+                        <label for="maxAttempts">Maksymalna liczba prób</label>
+                        <input type="number" class="form-control" id="maxAttempts" name="maxAttempts" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Dodaj test</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-container">
+                <h2>Dodaj pytania:</h2>
+                <div id="questions-container"></div>
+                <button type="button" class="btn btn-secondary mb-3" id="add-question-btn">Dodaj pytanie</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        let questionIndex = 0;
+
+        $('#add-question-btn').click(function() {
+            const questionHtml = `
+                    <div class="question-container" data-index="${questionIndex}">
+                        <div class="question-header">
+                            <span class="question-number">Pytanie ${questionIndex + 1}</span>
+                            <div class="form-group">
+                                <label for="question-${questionIndex}">Pytanie</label>
+                                <input type="text" class="form-control" id="question-${questionIndex}" name="question-${questionIndex}" required minlength="3">
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm btn-remove-question" data-question-index="${questionIndex}">Usuń pytanie</button>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label>Odpowiedzi</label>
+                            <div class="answers-container" id="answers-container-${questionIndex}">
+                                <div class="input-group mb-2 answer-input-group" data-index="0">
+                                    <input type="text" class="form-control answer-input" name="answer-${questionIndex}-0" required minlength="3">
+                                    <div class="input-group-append">
+                                        <div class="input-group-text">
+                                            <input type="checkbox" class="correct-answer-checkbox answer-checkbox" name="correct-answer-${questionIndex}" value="0">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm add-answer-btn" data-question-index="${questionIndex}">Dodaj odpowiedź</button>
+                            <button type="button" class="btn btn-danger btn-sm remove-answer-btn" data-question-index="${questionIndex}">Usuń ostatnią odpowiedź</button>
+                        </div>
+                    </div>`;
+            $('#questions-container').append(questionHtml);
+            questionIndex++;
+        });
+
+        $(document).on('click', '.add-answer-btn', function() {
+            const questionIndex = $(this).data('question-index');
+            const answersContainer = $(`#answers-container-${questionIndex}`);
+            const answerIndex = answersContainer.find('.answer-input-group').length;
+            const answerHtml = `
+                    <div class="input-group mb-2 answer-input-group" data-index="${answerIndex}">
+                        <input type="text" class="form-control answer-input" name="answer-${questionIndex}-${answerIndex}" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <input type="checkbox" class="correct-answer-checkbox answer-checkbox" name="correct-answer-${questionIndex}" value="${answerIndex}">
+                            </div>
+                        </div>
+                    </div>`;
+            answersContainer.append(answerHtml);
+        });
+
+        $(document).on('click', '.remove-answer-btn', function() {
+            const questionIndex = $(this).data('question-index');
+            const answersContainer = $(`#answers-container-${questionIndex}`);
+            if (answersContainer.children().length > 1) {
+                answersContainer.children().last().remove();
+            } else {
+                alert('Musisz mieć co najmniej jedną odpowiedź.');
+            }
+        });
+
+        $(document).on('click', '.btn-remove-question', function() {
+            const questionIndex = $(this).data('question-index');
+            $(`.question-container[data-index="${questionIndex}"]`).remove();
+            updateQuestionNumbers();
+        });
+
+        $('#test-form').submit(function(event) {
+            event.preventDefault();
+
+            const name = $('#name').val();
+            const type = $('#type').val();
+            const timeLimit = $('#timeLimit').val();
+            const visibility = $('#visibility').is(':checked');
+            const maxAttempts = $('#maxAttempts').val();
+
+            const data = [];
+
+            $('.question-container').each(function() {
+                const questionIndex = $(this).data('index');
+                const questionText = $(`#question-${questionIndex}`).val();
+                const answers = [];
+                const correctAnswers = [];
+
+                $(`#answers-container-${questionIndex} .answer-input-group`).each(function() {
+                    const answerIndex = $(this).data('index');
+                    const answerText = $(`input[name="answer-${questionIndex}-${answerIndex}"]`).val();
+                    answers.push(answerText);
+
+                    if ($(`input[name="correct-answer-${questionIndex}"][value="${answerIndex}"]`).is(':checked')) {
+                        correctAnswers.push(answerIndex);
+                    }
+                });
+                if(!correctAnswers.length){
+                    alert('Pytanie musi posiadać co najmniej jedną poprawną odpowiedź!');
+                    return;
+                }
+                data.push({
+                    question: questionText,
+                    answers: answers,
+                    correctAnswers: correctAnswers
+                });
+            });
+
+            const test = {
+                name: name,
+                type: type,
+                timeLimit: parseInt(timeLimit),
+                visibility: visibility,
+                maxAttempts: parseInt(maxAttempts),
+                data: data
+            };
+
+            $.ajax({
+                url: '/admin/tests',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(test),
+                success: function(response) {
+                    alert('Test został pomyślnie dodany!');
+                },
+                error: function(error) {
+                    alert('Wystąpił błąd podczas dodawania testu.');
+                }
+            });
+        });
+
+        function updateQuestionNumbers() {
+            $('.question-number').each(function(index) {
+                $(this).text(`Pytanie ${index + 1}`);
+            });
+        }
+    });
+</script>
+</body>
+</html>

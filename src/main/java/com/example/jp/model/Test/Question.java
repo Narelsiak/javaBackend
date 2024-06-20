@@ -21,6 +21,8 @@ public class Question {
 
     private String text;
 
+    private String imagePath;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "test_id", nullable = false)
     @JsonIgnore

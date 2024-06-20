@@ -4,10 +4,14 @@ import com.example.jp.model.Test.Option;
 import com.example.jp.model.Test.Question;
 import com.example.jp.repositories.Test.QuestionRepository;
 import com.example.jp.services.Test.QuestionService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -29,8 +33,26 @@ public class QuestionController {
     }
 
     @PostMapping("/create/{testId}")
-    public Question createQuestion(@PathVariable Long testId, @RequestBody Question question) {
-        return questionService.createQuestion(question, testId);
+    public Question createQuestion(@PathVariable Long testId, @RequestParam("question") String questionJson, @RequestParam(value = "image", required = false) MultipartFile imageFile) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        Question question;
+        try {
+            question = objectMapper.readValue(questionJson, Question.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error parsing question JSON", e);
+        }
+
+        return questionService.createQuestion(question, testId, imageFile);
+    }
+
+    @DeleteMapping("/delete/{questionId}")
+    public ResponseEntity<String> deleteQuestion(@PathVariable Long questionId) {
+        try {
+            questionService.deleteQuestion(questionId);
+            return ResponseEntity.ok("Pytanie zostało pomyślnie usunięte.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Wystąpił błąd podczas usuwania pytania.");
+        }
     }
 
     @PutMapping("/{questionId}")

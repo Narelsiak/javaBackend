@@ -71,6 +71,7 @@
                             <label for="question-${question.id}">Pytanie</label>
                             <input type="text" class="form-control question-input" id="question-${question.id}" name="question-${question.id}" value="${question.text}" required minlength="3">
                         </div>
+                        ${question.imagePath ? `<div class="form-group"><img src="/${question.imagePath}" alt="Question Image" class="img-fluid"></div>` : ''}
                         <div class="form-group">
                             <label for="answers-${question.id}">Odpowiedzi</label>
                             <div id="answers-${question.id}">
@@ -113,6 +114,10 @@
                             <input type="text" class="form-control question-input" id="question-${newQuestionId}" name="question-${newQuestionId}" required minlength="3">
                         </div>
                         <div class="form-group">
+                            <label for="image-${newQuestionId}">Obrazek (opcjonalnie)</label>
+                            <input type="file" class="form-control" id="image-${newQuestionId}" name="image-${newQuestionId}" accept="image/*">
+                        </div>
+                        <div class="form-group">
                             <label for="answers-${newQuestionId}">Odpowiedzi</label>
                             <div id="answers-${newQuestionId}">
                                 <!-- Tutaj będą dodawane odpowiedzi -->
@@ -142,14 +147,23 @@
                 }
             });
 
+            const formData = new FormData();
+            formData.append('question', JSON.stringify({
+                text: questionText,
+                options: answers
+            }));
+
+            const imageFile = $(`#image-${questionId}`)[0].files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+
             $.ajax({
                 url: `/admin/questions/create/${testId}`,
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    text: questionText,
-                    options: answers,
-                }),
+                contentType: false,
+                processData: false,
+                data: formData,
                 success: function(response) {
                     alert('Pytanie zostało pomyślnie zapisane.');
                     location.reload(); // Odśwież stronę, aby zobaczyć zaktualizowaną listę pytań
@@ -199,7 +213,18 @@
         // Funkcja do usuwania pytania
         $('#questions-container').on('click', '.btn-remove-question', function() {
             const questionId = $(this).data('question-id');
-            $(`[data-question-id="${questionId}"]`).remove();
+
+            $.ajax({
+                url: `/admin/questions/delete/${questionId}`,
+                method: 'DELETE',
+                success: function(response) {
+                    console.log('Pytanie zostało pomyślnie usunięte.');
+                    $(`[data-question-id="${questionId}"]`).remove();
+                },
+                error: function(error) {
+                    console.error('Wystąpił błąd podczas usuwania pytania.');
+                }
+            });
         });
 
         // Funkcja do aktualizacji pytania

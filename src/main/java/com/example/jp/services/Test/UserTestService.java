@@ -6,6 +6,7 @@ import com.example.jp.model.Test.*;
 import com.example.jp.model.User;
 import com.example.jp.repositories.Test.*;
 import com.example.jp.repositories.UserRepository;
+import com.example.jp.services.CalculateGrade;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -104,7 +105,10 @@ public class UserTestService {
             test.setCompleted(true);
             test.setEndTime(endTime);
             userTestRepository.save(test);
-            data.put("score", userAnswerRepository.calculateTotalPointsByTestId(testId));
+            long score = userAnswerRepository.calculateTotalPointsByTestId(testId);
+            long maxScore = test.getTest().getQuestions().stream().count();
+            data.put("score", score);
+            data.put("grade", String.valueOf(CalculateGrade.calculate(score, maxScore)));
             return new ApiResponse<>(false, data, "Time's up");
         }
         if (!test.getId().equals(testId)) {
@@ -143,7 +147,8 @@ public class UserTestService {
             test.setEndTime(LocalDateTime.now());
             userTestRepository.save(test);
             int score = userAnswerRepository.calculateTotalPointsByTestId(testId);
-            data.put("score", score);
+            long maxScore = test.getTest().getQuestions().stream().count();
+            data.put("grade", CalculateGrade.calculate(score, maxScore));
             return new ApiResponse<>(false, data, "No more questions available");
         }
 
@@ -185,6 +190,8 @@ public class UserTestService {
             userTest.setEndTime(endTime);
             userTestRepository.save(userTest);
             data.put("score", userAnswerRepository.calculateTotalPointsByTestId(testId));
+            data.put("grade", String.valueOf(CalculateGrade.calculate(userAnswerRepository.calculateTotalPointsByTestId(userTest.getId()), userTest.getTest().getQuestions().stream().count())));
+
             return new ApiResponse<>(false, data, "Test time expired");
         }
         Optional<Question> optionalQuestion = userAnswerRepository.findQuestionWithNoAnswerForTest(testId);
@@ -233,6 +240,7 @@ public class UserTestService {
             test.put("type", userTest.getTest().getType());
             if (userTest.isCompleted()) {
                 test.put("id", userTest.getId());
+                test.put("grade", String.valueOf(CalculateGrade.calculate(userAnswerRepository.calculateTotalPointsByTestId(userTest.getId()), userTest.getTest().getQuestions().stream().count())));
                 test.put("score", userAnswerRepository.calculateTotalPointsByTestId(userTest.getId()));
                 System.out.println(userTest.getId());
                 finishedTests.add(test);

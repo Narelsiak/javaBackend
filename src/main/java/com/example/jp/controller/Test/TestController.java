@@ -12,15 +12,21 @@ import com.example.jp.services.CalculateGrade;
 import com.example.jp.services.Test.OptionService;
 import com.example.jp.services.Test.QuestionService;
 import com.example.jp.services.Test.TestService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Comparator;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.*;
+
 import java.util.stream.Collectors;
 
 @RestController
@@ -66,8 +72,18 @@ public class TestController {
         testService.editTest(id, updates);
         return ResponseEntity.ok().build();
     }
-    @PostMapping
-    public String createTest(@RequestBody Map<String, Object> testMap) {
+
+    @PostMapping(consumes = {"multipart/form-data"})
+    public String createTest(@RequestParam("test") String testJson, @RequestParam(value = "images", required = false) List<MultipartFile> imageFiles) {
+        // Parse the JSON string into a Map
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> testMap = null;
+        try {
+            testMap = objectMapper.readValue(testJson, Map.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
         String name = (String) testMap.get("name");
         String type = (String) testMap.get("type");
         int timeLimit = (int) testMap.get("timeLimit");
@@ -81,13 +97,13 @@ public class TestController {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid test type: " + type);
         }
-        //test.setType(type);
         test.setVisibility(visibility);
         test.setMaxAttempts(maxAttempts);
         test.setTimeLimit(timeLimit);
         test = testRepository.save(test);
 
         List<Map<String, Object>> questionsData = (List<Map<String, Object>>) testMap.get("data");
+        int imageIndex = 0;
         for (Map<String, Object> questionData : questionsData) {
             String questionText = (String) questionData.get("question");
             List<String> answers = (List<String>) questionData.get("answers");
@@ -96,6 +112,33 @@ public class TestController {
             Question question = new Question();
             question.setText(questionText);
             question.setTest(test);
+
+            // Save the image if provided
+            if (imageFiles != null && !imageFiles.isEmpty() && imageFiles.size() > imageIndex) {
+                MultipartFile imageFile = imageFiles.get(imageIndex);
+                if (imageFile != null && !imageFile.isEmpty()) {
+                    String imageName = imageFile.getOriginalFilename();
+                    String imageExtension = "";
+                    int dotIndex = imageName.lastIndexOf('.');
+                    if (dotIndex >= 0) {
+                        imageExtension = imageName.substring(dotIndex + 1);
+                    }
+                    String fileName =  UUID.randomUUID() + "." + imageExtension;
+                    try {
+                        Path uploadDir = Paths.get("data/questions");
+                        if (!Files.exists(uploadDir)) {
+                            Files.createDirectories(uploadDir);
+                        }
+                        Path filePath = uploadDir.resolve(fileName);
+                        Files.copy(imageFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                        question.setImagePath(filePath.toString());
+                    }catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            imageIndex++;
             question = questionRepository.save(question);
 
             List<Option> options = new ArrayList<>();

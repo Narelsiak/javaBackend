@@ -32,12 +32,13 @@
     </style>
 </head>
 <body>
+<div id="header-placeholder"></div>
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-6">
             <div class="form-container">
                 <h2>Dodaj nowy test:</h2>
-                <form id="test-form">
+                <form id="test-form" enctype="multipart/form-data">
                     <div class="form-group">
                         <label for="name">Nazwa</label>
                         <input type="text" class="form-control" id="name" name="name" required>
@@ -78,6 +79,9 @@
 
 <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
 <script>
+    $(function() {
+        $("#header-placeholder").load("/header");
+    });
     $(document).ready(function() {
         let questionIndex = 0;
 
@@ -89,6 +93,10 @@
                             <div class="form-group">
                                 <label for="question-${questionIndex}">Pytanie</label>
                                 <input type="text" class="form-control" id="question-${questionIndex}" name="question-${questionIndex}" required minlength="3">
+                            </div>
+                            <div class="form-group">
+                                <label for="image-${questionIndex}">Obrazek (opcjonalnie)</label>
+                                <input type="file" class="form-control" id="image-${questionIndex}" name="image-${questionIndex}" accept="image/*">
                             </div>
                             <button type="button" class="btn btn-danger btn-sm btn-remove-question" data-question-index="${questionIndex}">Usuń pytanie</button>
                         </div>
@@ -135,6 +143,7 @@
                 answersContainer.children().last().remove();
             } else {
                 alert('Musisz mieć co najmniej jedną odpowiedź.');
+                return;
             }
         });
 
@@ -146,15 +155,10 @@
 
         $('#test-form').submit(function(event) {
             event.preventDefault();
+            var out = 0;
+            const formData = new FormData(this);
 
-            const name = $('#name').val();
-            const type = $('#type').val();
-            const timeLimit = $('#timeLimit').val();
-            const visibility = $('#visibility').is(':checked');
-            const maxAttempts = $('#maxAttempts').val();
-
-            const data = [];
-
+            const questions = [];
             $('.question-container').each(function() {
                 const questionIndex = $(this).data('index');
                 const questionText = $(`#question-${questionIndex}`).val();
@@ -170,31 +174,40 @@
                         correctAnswers.push(answerIndex);
                     }
                 });
-                if(!correctAnswers.length){
+                if (!correctAnswers.length) {
                     alert('Pytanie musi posiadać co najmniej jedną poprawną odpowiedź!');
-                    return;
+                    out = 1;
                 }
-                data.push({
+                questions.push({
                     question: questionText,
                     answers: answers,
                     correctAnswers: correctAnswers
                 });
-            });
 
+                // Dodaj obrazek do formData
+                const imageFile = $(`#image-${questionIndex}`)[0].files[0];
+                if (imageFile) {
+                    formData.append('images', imageFile);
+                }
+            });
+            if(out) return;
             const test = {
-                name: name,
-                type: type,
-                timeLimit: parseInt(timeLimit),
-                visibility: visibility,
-                maxAttempts: parseInt(maxAttempts),
-                data: data
+                name: $('#name').val(),
+                type: $('#type').val(),
+                timeLimit: parseInt($('#timeLimit').val()),
+                visibility: $('#visibility').is(':checked'),
+                maxAttempts: parseInt($('#maxAttempts').val()),
+                data: questions
             };
+
+            formData.append('test', JSON.stringify(test));
 
             $.ajax({
                 url: '/admin/tests',
                 method: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(test),
+                contentType: false,
+                processData: false,
+                data: formData,
                 success: function(response) {
                     alert('Test został pomyślnie dodany!');
                 },
